@@ -53,8 +53,7 @@ export function generateContractBlob(row, templateArrayBuffer) {
     paragraphLoop: false,
     linebreaks: false,
   });
-  doc.setData(buildTagData(row));
-  doc.render();
+  doc.render(buildTagData(row));
   return doc.getZip().generate({
     type: 'blob',
     mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

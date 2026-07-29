@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import './App.css'
-import { processAll, downloadContract, downloadAllAsZip } from './utils/contractGenerator'
+import { processAll, downloadContract, downloadContractPdf, downloadAllAsZip } from './utils/contractGenerator'
 
 const TEMPLATES_BASE = '/templates'
 const CON_BONO_FILE = 'Contrato Obra o Labor con Bono Incentivo Adicional (1).docx'
@@ -14,6 +14,7 @@ function App() {
   const [error, setError] = useState(null)
   const [excelFile, setExcelFile] = useState(null)
   const [dragActive, setDragActive] = useState(false)
+  const [pdfLoadingIdx, setPdfLoadingIdx] = useState(null)
   const fileInputRef = useRef(null)
 
   async function fetchTemplate(name) {
@@ -111,6 +112,15 @@ function App() {
     downloadContract(result)
   }
 
+  async function handleDownloadPdf(result, idx) {
+    setPdfLoadingIdx(idx)
+    try {
+      await downloadContractPdf(result)
+    } finally {
+      setPdfLoadingIdx(null)
+    }
+  }
+
   function handleDownloadAll() {
     if (!results || results.length === 0) return
     downloadAllAsZip(results)
@@ -193,7 +203,7 @@ function App() {
                   <span className="step-number">3</span>
                   <div>
                     <strong>Descarga</strong>
-                    <p>Descarga contratos individualmente o todos juntos en un ZIP.</p>
+                    <p>Descarga contratos en Word o PDF. El PDF se genera via backend y es identico al Word. La primera vez puede tardar ~30s (el servidor se despierta).</p>
                   </div>
                 </li>
               </ol>
@@ -355,14 +365,33 @@ function App() {
                                   {r.withBonus ? 'Con Bono' : 'Sin Bono'}
                                 </span>
                               </td>
-                              <td>
+                              <td className="col-actions">
                                 <button className="btn-download-one" onClick={() => handleDownloadOne(r)}>
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                     <polyline points="7 10 12 15 17 10"/>
                                     <line x1="12" y1="15" x2="12" y2="3"/>
                                   </svg>
-                                  Descargar
+                                  Word
+                                </button>
+                                <button
+                                  className="btn-download-pdf"
+                                  onClick={() => handleDownloadPdf(r, i)}
+                                  disabled={pdfLoadingIdx === i}
+                                >
+                                  {pdfLoadingIdx === i ? (
+                                    <svg className="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                    </svg>
+                                  ) : (
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                      <polyline points="14 2 14 8 20 8"/>
+                                      <line x1="12" y1="18" x2="12" y2="9"/>
+                                      <polyline points="9 13 12 16 15 13"/>
+                                    </svg>
+                                  )}
+                                  PDF
                                 </button>
                               </td>
                             </tr>

@@ -94,6 +94,30 @@ export function downloadContract(result) {
   saveAs(result.blob, fileName);
 }
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+export async function downloadContractPdf(result) {
+  const formData = new FormData();
+  formData.append('file', result.blob, 'contrato.docx');
+
+  const response = await fetch(`${API_URL}/convert`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Error al generar el PDF');
+  }
+
+  const pdfBlob = await response.blob();
+  const tipo = result.withBonus
+    ? 'Contrato Obra o Labor con Bono Incentivo'
+    : 'Contrato Obra o Labor sin Bono Incentivo';
+  const fileName = `${tipo} - ${sanitizeFileName(result.nombre)}.pdf`;
+  saveAs(pdfBlob, fileName);
+}
+
 export function downloadAllAsZip(results) {
   const zip = new PizZip();
 
